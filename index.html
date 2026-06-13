@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>notes.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    display: flex;
+    height: 100vh;
+    background: #0f0f0f;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    color: #e8e2d9;
+    overflow: hidden;
+  }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 200px;
+    background: #111;
+    border-right: 1px solid #1e1e1e;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.2s;
+    overflow: hidden;
+  }
+  #sidebar.hidden { width: 0; border-right: none; }
+  .sidebar-logo {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid #1e1e1e;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: #c9b99a;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  #btn-new-note {
+    display: block;
+    width: calc(100% - 24px);
+    margin: 12px 12px 0;
+    padding: 8px 10px;
+    background: #c9b99a;
+    color: #0f0f0f;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+  #btn-new-note:hover { background: #d9cba8; }
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #181818;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin: 8px 12px;
+  }
+  .search-icon { opacity: 0.4; font-size: 11px; }
+  #search-input {
+    background: none;
+    color: #e8e2d9;
+    font-size: 11px;
+    font-family: inherit;
+    border: none;
+    outline: none;
+    width: 100%;
+    letter-spacing: 0.02em;
+  }
+  .tab-row {
+    display: flex;
+    padding: 0 12px 8px;
+    gap: 4px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 5px 4px;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    font-size: 10px;
+    font-family: inherit;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #555;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn.active { background: #1f1f1f; color: #c9b99a; }
+  .folder-section { padding: 0 8px; flex: 1; overflow-y: auto; }
+  .folder-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: #444;
+    padding: 4px 8px 6px;
+    text-transform: uppercase;
+  }
+  .folder-btn {
+    width: 100%;
+    padding: 7px 10px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #555;
+    font-size: 12px;
+    font-family: inherit;
+    margin-bottom: 1px;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .folder-btn:hover { background: #1c1c1c; }
+  .folder-btn.active { background: #1f1f1f; color: #e8e2d9; }
+  .folder-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    margin-right: 7px;
+  }
+  .folder-count { font-size: 10px; color: #3a3a3a; }
+  #btn-empty-trash {
+    display: none;
+    width: calc(100% - 24px);
+    margin: 8px 12px;
+    padding: 7px;
+    background: none;
+    border: 1px solid #2a1a1a;
+    border-radius: 6px;
+    color: #a05050;
+    font-size: 11px;
+    font-family: inherit;
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+  }
+  #btn-empty-trash:hover { background: #1a0a0a; }
+  .spacer-16 { height: 16px; }
+  .folder-label-row { display: flex; align-items: center; }
+  .note-card.loading { opacity: 0.5; }
+  .pin-btn.on { color: #c9b99a; }
+  .pin-btn.off { color: #666; }
+  .restore-btn { color: #6cf9b2; }
+  .perm-del-btn { color: #a05050; }
+  .folder-dot.all, .card-folder-dot.all { background: #333; }
+  .folder-dot.personal, .card-folder-dot.personal { background: #f9a26c; }
+  .folder-dot.work, .card-folder-dot.work { background: #6cb6f9; }
+  .folder-dot.ideas, .card-folder-dot.ideas { background: #b96cf9; }
+  .folder-dot.journal, .card-folder-dot.journal { background: #6cf9b2; }
+
+  /* ── Editor ── */
+  #note-list-panel {
+    width: 260px;
+    background: #0f0f0f;
+    border-right: 1px solid #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .list-header {
+    padding: 20px 16px 10px;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .list-header-title { font-size: 13px; font-weight: 500; color: #e8e2d9; letter-spacing: -0.01em; }
+  .list-header-count { font-size: 10px; color: #444; margin-top: 1px; }
+  #btn-toggle-sidebar {
+    color: #888;
+    font-size: 14px;
+    padding: 4px;
+    background: none;
+    border: none;
+    opacity: 0.45;
+    transition: opacity 0.15s;
+  }
+  #btn-toggle-sidebar:hover { opacity: 1; }
+  #notes-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .section-label {
+    padding: 4px 14px 2px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: #3a3a3a;
+    text-transform: uppercase;
+  }
+  .note-card {
+    padding: 10px 14px;
+    border-left: 2px solid transparent;
+    position: relative;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .note-card:hover { background: #1c1c1c; }
+  .note-card:hover .hover-actions { opacity: 1; }
+  .note-card.active { background: #1a1a1a; border-left-color: #c9b99a; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; }
+  .card-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: #bbb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  .note-card.active .card-title { color: #e8e2d9; }
+  .hover-actions { display: flex; gap: 2px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+  .icon-btn {
+    background: none;
+    border: none;
+    padding: 2px 3px;
+    font-size: 11px;
+    opacity: 0.45;
+    transition: opacity 0.15s;
+    line-height: 1;
+  }
+  .icon-btn:hover { opacity: 1; }
+  .icon-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+  .card-preview {
+    font-size: 11px;
+    color: #3d3d3d;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-meta { display: flex; justify-content: space-between; margin-top: 4px; align-items: center; }
+  .card-folder { display: flex; align-items: center; gap: 4px; }
+  .card-folder-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+  .card-folder-name { font-size: 9px; color: #3a3a3a; letter-spacing: 0.04em; }
+  .card-date { font-size: 9px; color: #2e2e2e; }
+  .empty-list { padding: 32px 16px; text-align: center; color: #333; font-size: 12px; }
+
+  /* ── Editor ── */
+  #editor-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #0a0a0a;
+    position: relative;
+    overflow: hidden;
+  }
+  .editor-toolbar {
+    padding: 16px 28px 12px;
+    border-bottom: 1px solid #181818;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #edit-folder-select {
+    background: #181818;
+    border: 1px solid #252525;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    color: #c9b99a;
+  }
+  .toolbar-actions { display: flex; gap: 8px; align-items: center; }
+  .editor-toolbar .icon-btn {
+    font-size: 13px;
+    padding: 4px 6px;
+  }
+  #btn-pin { color: #555; }
+  #btn-trash-note { color: #804040; }
+  #btn-save {
+    padding: 6px 14px;
+    background: #c9b99a;
+    color: #0f0f0f;
+    border: none;
+    border-radius: 5px;
+    font-size: 11px;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  #btn-save:hover { background: #d9cba8; }
+  #btn-restore {
+    padding: 6px 12px;
+    background: none;
+    border: 1px solid #2a4a3a;
+    color: #6cf9b2;
+    border-radius: 5px;
+    font-size: 11px;
+    font-family: inherit;
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+  #btn-restore:hover { background: #0a1a10; }
+  #btn-perm-delete-editor {
+    display: none;
+    color: #804040;
+  }
+  #trash-notice {
+    display: none;
+  }
+  #editor-active {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+  }
+  #edit-title {
+    padding: 24px 28px 8px;
+    background: none;
+    color: #e8e2d9;
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: -0.02em;
+    width: 100%;
+    border: none;
+    outline: none;
+  }
+  #edit-body {
+    flex: 1;
+    padding: 8px 28px 28px;
+    background: none;
+    color: #888;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.8;
+    letter-spacing: 0.01em;
+    resize: none;
+    outline: none;
+    border: none;
+    overflow-y: auto;
+  }
+  .trash-notice {
+    padding: 10px 28px;
+    border-top: 1px solid #181818;
+    font-size: 11px;
+    color: #5a3a3a;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .editor-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #222;
+  }
+  .editor-empty-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 48px;
+    font-style: italic;
+    font-weight: 300;
+    margin-bottom: 8px;
+  }
+  .editor-empty-hint { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* ── Error Toast ── */
+  #error-toast {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a1010;
+    border: 1px solid #5a2020;
+    border-radius: 7px;
+    padding: 10px 18px;
+    font-size: 11px;
+    color: #f9a2a2;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    max-width: 380px;
+    z-index: 50;
+    white-space: nowrap;
+    animation: fadeIn 0.2s ease;
+  }
+  #error-toast.visible { display: flex; }
+  #btn-dismiss-error {
+    background: none;
+    border: none;
+    color: #a06060;
+    font-size: 13px;
+    padding: 0;
+    line-height: 1;
+  }
+
+  /* ── Confirm Modal ── */
+  #confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.15s ease;
+  }
+  #confirm-overlay.visible { display: flex; }
+  .confirm-box {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 28px 32px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+  }
+  .confirm-title {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-style: italic;
+    margin-bottom: 8px;
+    color: #e8e2d9;
+  }
+  .confirm-body { font-size: 12px; color: #555; margin-bottom: 24px; line-height: 1.6; }
+  .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+  #btn-confirm-cancel {
+    padding: 8px 20px;
+    background: none;
+    border: 1px solid #2a2a2a;
+    color: #888;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  #btn-confirm-cancel:hover { background: #1a1a1a; }
+  #btn-confirm-delete {
+    padding: 8px 20px;
+    background: #4a1a1a;
+    border: 1px solid #7a2a2a;
+    color: #f9a2a2;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  #btn-confirm-delete:hover { background: #5a2020; }
+
+  /* ── Animations ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fade-in { animation: fadeIn 0.25s ease; }
+  .spinner {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 1.5px solid #555;
+    border-top-color: #c9b99a;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">notes.</div>
+  <button id="btn-new-note">+ NEW NOTE</button>
+  <div class="search-box">
+    <span class="search-icon">⌕</span>
+    <input id="search-input" placeholder="search..." autocomplete="off" />
+  </div>
+  <div class="tab-row">
+    <button class="tab-btn active" data-tab="active">notes</button>
+    <button class="tab-btn" data-tab="trash" id="tab-trash-btn">trash</button>
+  </div>
+  <div id="folder-section" class="folder-section">
+    <div class="folder-label">Folders</div>
+    <!-- injected by JS -->
+  </div>
+  <button id="btn-empty-trash">Empty Trash</button>
+  <div class="spacer-16"></div>
+</div>
+
+<!-- NOTE LIST -->
+<div id="note-list-panel">
+  <div class="list-header">
+    <div>
+      <div class="list-header-title" id="list-title">All Notes</div>
+      <div class="list-header-count" id="list-count">0 notes</div>
+    </div>
+    <button id="btn-toggle-sidebar">☰</button>
+  </div>
+  <div id="notes-scroll">
+    <!-- injected by JS -->
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div id="editor-panel">
+  <!-- empty state -->
+  <div class="editor-empty" id="editor-empty">
+    <div class="editor-empty-logo">notes.</div>
+    <div class="editor-empty-hint" id="editor-empty-hint">Select or create a note</div>
+  </div>
+
+  <!-- active editor (hidden until note selected) -->
+  <div id="editor-active" class="fade-in">
+    <div class="editor-toolbar">
+      <select id="edit-folder-select"></select>
+      <div class="toolbar-actions">
+        <button class="icon-btn pin-btn" id="btn-pin" title="Pin">◇</button>
+        <button id="btn-save">SAVE</button>
+        <button class="icon-btn" id="btn-trash-note" title="Move to Trash">✕</button>
+        <button id="btn-restore">↩ Restore</button>
+        <button class="icon-btn" id="btn-perm-delete-editor" title="Delete Forever">⊗</button>
+      </div>
+    </div>
+    <input id="edit-title" placeholder="Title" />
+    <textarea id="edit-body" placeholder="Start writing..."></textarea>
+    <div class="trash-notice" id="trash-notice">This note is in Trash — restore it to edit.</div>
+  </div>
+
+  <!-- error toast -->
+  <div id="error-toast">
+    <span id="error-text">⚠ Error</span>
+    <button id="btn-dismiss-error">✕</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Delete forever?</div>
+    <div class="confirm-body" id="confirm-body">This note will be permanently deleted. This cannot be undone.</div>
+    <div class="confirm-actions">
+      <button id="btn-confirm-cancel">Cancel</button>
+      <button id="btn-confirm-delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const FOLDERS = ["Personal", "Work", "Ideas", "Journal"];
+const FOLDER_COLORS = { Personal: "#f9a26c", Work: "#6cb6f9", Ideas: "#b96cf9", Journal: "#6cf9b2" };
+
+const STORAGE_KEY = "notes_app_data_v1";
+
+const DEFAULT_NOTES = [
+  {
+    id: 1,
+    title: "Meeting Agenda",
+    body: "Discuss Q3 roadmap\n\n- Review last sprint's progress\n- Plan upcoming feature priorities\n- Assign owners for each workstream",
+    folder: "Work",
+    pinned: true,
+    deleted: false,
+    created: "2026-06-05"
+  },
+  {
+    id: 2,
+    title: "App Ideas",
+    body: "Spatial audio journaling\n\nAn app that lets you record voice notes tied to physical locations, so you can revisit memories by walking through the places where you made them.",
+    folder: "Ideas",
+    pinned: true,
+    deleted: false,
+    created: "2026-05-20"
+  },
+  {
+    id: 3,
+    title: "Today's Reflection",
+    body: "Slow morning. Coffee on the balcony, watched the city wake up. Feeling grateful for the quiet moments before the day gets busy.",
+    folder: "Journal",
+    pinned: true,
+    deleted: false,
+    created: "2026-06-07"
+  },
+  {
+    id: 4,
+    title: "Book List",
+    body: "The Dispossessed\n\nNext up: The Left Hand of Darkness, Klara and the Sun, Project Hail Mary",
+    folder: "Personal",
+    pinned: false,
+    deleted: false,
+    created: "2026-05-28"
+  }
+];
+
+let notes = [];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let state = {
+  selectedFolder: "All",
+  tab: "active",
+  activeNoteId: null,
+  isNew: false,
+  sidebarOpen: true,
+  confirmTarget: null, // noteId | "all" | null
+  apiLoading: null,    // noteId | "trash" | null
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function timeAgo(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 86400000);
+  if (diff <= 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  if (diff < 7) return `${diff}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function getVisibleNotes() {
+  const q = document.getElementById("search-input").value.toLowerCase();
+  return notes.filter(n => {
+    if (state.tab === "active" && n.deleted) return false;
+    if (state.tab === "trash" && !n.deleted) return false;
+    if (state.selectedFolder !== "All" && n.folder !== state.selectedFolder) return false;
+    if (q && !n.title.toLowerCase().includes(q) && !n.body.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function getActiveNote() { return notes.find(n => n.id === state.activeNoteId) || null; }
+
+function folderCounts() {
+  const counts = { All: 0 };
+  FOLDERS.forEach(f => counts[f] = 0);
+  notes.filter(n => !n.deleted).forEach(n => { counts.All++; if (counts[n.folder] !== undefined) counts[n.folder]++; });
+  return counts;
+}
+function trashCount() { return notes.filter(n => n.deleted).length; }
+
+// ── Local storage persistence ────────────────────────────────────────────────
+function loadNotes() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      notes = JSON.parse(raw);
+    } else {
+      notes = JSON.parse(JSON.stringify(DEFAULT_NOTES));
+      saveToStorage();
+    }
+  } catch (e) {
+    notes = JSON.parse(JSON.stringify(DEFAULT_NOTES));
+  }
+  render();
+}
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  } catch (e) {
+    showError("Could not save: " + e.message);
+  }
+}
+
+function showError(msg) {
+  document.getElementById("error-text").textContent = "⚠ " + msg;
+  document.getElementById("error-toast").classList.add("visible");
+}
+
+let nextId = () => (notes.reduce((max, n) => Math.max(max, n.id), 0) + 1);
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  renderSidebar();
+  renderNoteList();
+  renderEditor();
+}
+
+function renderSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  sidebar.classList.toggle("hidden", !state.sidebarOpen);
+
+  // tabs
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === state.tab);
+  });
+
+  // trash tab label
+  const tc = trashCount();
+  document.getElementById("tab-trash-btn").textContent = tc ? `trash (${tc})` : "trash";
+
+  // folder buttons
+  const folderSection = document.getElementById("folder-section");
+  if (state.tab === "trash") {
+    folderSection.style.display = "none";
+    const emptyBtn = document.getElementById("btn-empty-trash");
+    emptyBtn.style.display = tc > 0 ? "block" : "none";
+    emptyBtn.disabled = false;
+    emptyBtn.innerHTML = "Empty Trash";
+    return;
+  }
+  folderSection.style.display = "block";
+  document.getElementById("btn-empty-trash").style.display = "none";
+
+  const counts = folderCounts();
+  const items = [{ label: "All Notes", key: "All" }, ...FOLDERS.map(f => ({ label: f, key: f }))];
+  folderSection.innerHTML = '<div class="folder-label">Folders</div>' + items.map(({ label, key }) => `
+    <button class="folder-btn ${state.selectedFolder === key ? "active" : ""}" data-folder="${key}">
+      <span class="folder-label-row">
+        <span class="folder-dot ${key !== "All" ? key.toLowerCase() : "all"}"></span>
+        ${label}
+      </span>
+      <span class="folder-count">${counts[key] ?? 0}</span>
+    </button>
+  `).join("");
+
+  folderSection.querySelectorAll(".folder-btn").forEach(btn => {
+    btn.addEventListener("click", () => { state.selectedFolder = btn.dataset.folder; render(); });
+  });
+}
+
+function renderNoteList() {
+  const visible = getVisibleNotes();
+  const pinned = visible.filter(n => n.pinned && !n.deleted);
+  const unpinned = visible.filter(n => !n.pinned || n.deleted);
+
+  // header
+  document.getElementById("list-title").textContent =
+    state.tab === "trash" ? "Trash" : state.selectedFolder === "All" ? "All Notes" : state.selectedFolder;
+  const cnt = visible.length;
+  document.getElementById("list-count").textContent = `${cnt} note${cnt !== 1 ? "s" : ""}`;
+
+  const scroll = document.getElementById("notes-scroll");
+  if (visible.length === 0) {
+    scroll.innerHTML = `<div class="empty-list">${state.tab === "trash" ? "Trash is empty" : "No notes found"}</div>`;
+    return;
+  }
+
+  let html = "";
+  if (state.tab === "active" && pinned.length > 0) html += '<div class="section-label">Pinned</div>';
+
+  [...pinned, ...unpinned].forEach(note => {
+    const isActive = note.id === state.activeNoteId;
+    const pinIcon = note.pinned ? "◆" : "◇";
+    const actionsBtns = state.tab === "active" ? `
+      <button class="icon-btn pin-btn ${note.pinned ? "on" : "off"}" data-id="${note.id}" title="${note.pinned ? "Unpin" : "Pin"}">${pinIcon}</button>
+      <button class="icon-btn trash-btn" data-id="${note.id}" title="Move to Trash">✕</button>
+    ` : `
+      <button class="icon-btn restore-btn" data-id="${note.id}" title="Restore">↩</button>
+      <button class="icon-btn perm-del-btn" data-id="${note.id}" title="Delete Forever">⊗</button>
+    `;
+
+    html += `
+      <div class="note-card ${isActive ? "active" : ""}" data-id="${note.id}">
+        <div class="card-top">
+          <div class="card-title">${escHtml(note.title)}</div>
+          <div class="hover-actions">${actionsBtns}</div>
+        </div>
+        <div class="card-preview">${escHtml(note.body.split("\n")[0])}</div>
+        <div class="card-meta">
+          <span class="card-folder">
+            <span class="card-folder-dot ${note.folder.toLowerCase()}"></span>
+            <span class="card-folder-name">${note.folder}</span>
+          </span>
+          <span class="card-date">${timeAgo(note.created)}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  scroll.innerHTML = html;
+
+  scroll.querySelectorAll(".note-card").forEach(card => {
+    const id = +card.dataset.id;
+    card.addEventListener("click", () => openNote(id));
+  });
+  scroll.querySelectorAll(".pin-btn").forEach(btn => {
+    btn.addEventListener("click", e => { e.stopPropagation(); togglePin(+btn.dataset.id); });
+  });
+  scroll.querySelectorAll(".trash-btn").forEach(btn => {
+    btn.addEventListener("click", e => { e.stopPropagation(); trashNote(+btn.dataset.id); });
+  });
+  scroll.querySelectorAll(".restore-btn").forEach(btn => {
+    btn.addEventListener("click", e => { e.stopPropagation(); restoreNote(+btn.dataset.id); });
+  });
+  scroll.querySelectorAll(".perm-del-btn").forEach(btn => {
+    btn.addEventListener("click", e => { e.stopPropagation(); openConfirm(+btn.dataset.id); });
+  });
+}
+
+function renderEditor() {
+  const note = getActiveNote();
+  const editorEmpty = document.getElementById("editor-empty");
+  const editorActive = document.getElementById("editor-active");
+  const hint = document.getElementById("editor-empty-hint");
+
+  if (!state.activeNoteId && !state.isNew) {
+    editorEmpty.style.display = "flex";
+    editorActive.style.display = "none";
+    hint.textContent = state.tab === "active" ? "Select or create a note" : "Select a note from trash";
+    return;
+  }
+
+  editorEmpty.style.display = "none";
+  editorActive.style.display = "flex";
+
+  // folder select
+  const sel = document.getElementById("edit-folder-select");
+  sel.innerHTML = FOLDERS.map(f => `<option value="${f}">${f}</option>`).join("");
+  if (state.isNew) {
+    sel.value = state.editFolder || "Personal";
+    sel.style.color = FOLDER_COLORS[sel.value] || "#c9b99a";
+  } else if (note) {
+    sel.value = note.folder;
+    sel.style.color = FOLDER_COLORS[note.folder] || "#c9b99a";
+  }
+
+  // pin button
+  const btnPin = document.getElementById("btn-pin");
+  if (note && !note.deleted) {
+    btnPin.style.display = "inline-flex";
+    btnPin.textContent = note.pinned ? "◆" : "◇";
+    btnPin.style.color = note.pinned ? "#c9b99a" : "#555";
+  } else {
+    btnPin.style.display = "none";
+  }
+
+  // save / trash / restore / perm-delete
+  const btnSave = document.getElementById("btn-save");
+  const btnTrash = document.getElementById("btn-trash-note");
+  const btnRestore = document.getElementById("btn-restore");
+  const btnPermDel = document.getElementById("btn-perm-delete-editor");
+  const trashNotice = document.getElementById("trash-notice");
+
+  const isDeleted = note?.deleted;
+  btnSave.style.display = isDeleted ? "none" : "inline-block";
+  btnTrash.style.display = (state.activeNoteId && !isDeleted) ? "inline-flex" : "none";
+  btnRestore.style.display = isDeleted ? "flex" : "none";
+  btnPermDel.style.display = isDeleted ? "inline-flex" : "none";
+  trashNotice.style.display = isDeleted ? "block" : "none";
+
+  // editable state
+  const titleEl = document.getElementById("edit-title");
+  const bodyEl = document.getElementById("edit-body");
+  titleEl.readOnly = !!isDeleted;
+  bodyEl.readOnly = !!isDeleted;
+  titleEl.style.cursor = isDeleted ? "default" : "text";
+  bodyEl.style.cursor = isDeleted ? "default" : "text";
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function openNote(id) {
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+  state.activeNoteId = id;
+  state.isNew = false;
+  document.getElementById("edit-title").value = note.title;
+  document.getElementById("edit-body").value = note.body;
+  state.editFolder = note.folder;
+  render();
+}
+
+function newNote() {
+  state.activeNoteId = null;
+  state.isNew = true;
+  state.tab = "active";
+  const f = state.selectedFolder !== "All" ? state.selectedFolder : "Personal";
+  state.editFolder = f;
+  document.getElementById("edit-title").value = "";
+  document.getElementById("edit-body").value = "";
+  render();
+  setTimeout(() => document.getElementById("edit-body").focus(), 50);
+}
+
+function saveNote() {
+  const title = document.getElementById("edit-title").value.trim();
+  const body = document.getElementById("edit-body").value.trim();
+  const folder = document.getElementById("edit-folder-select").value;
+  if (!title && !body) return;
+
+  if (state.isNew) {
+    const note = {
+      id: nextId(),
+      title: title || "Untitled",
+      body: document.getElementById("edit-body").value,
+      folder,
+      pinned: false,
+      deleted: false,
+      created: new Date().toISOString().slice(0, 10)
+    };
+    notes.unshift(note);
+    state.activeNoteId = note.id;
+    state.isNew = false;
+    state.editFolder = folder;
+  } else if (state.activeNoteId) {
+    const existing = notes.find(n => n.id === state.activeNoteId);
+    if (!existing) return;
+    const updated = {
+      title: title || "Untitled",
+      body: document.getElementById("edit-body").value,
+      folder,
+    };
+    notes = notes.map(n => n.id === state.activeNoteId ? { ...n, ...updated } : n);
+  }
+  saveToStorage();
+  render();
+}
+
+function togglePin(id) {
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+  notes = notes.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n);
+  saveToStorage();
+  render();
+}
+
+function trashNote(id) {
+  notes = notes.map(n => n.id === id ? { ...n, deleted: true } : n);
+  if (state.activeNoteId === id) { state.activeNoteId = null; state.isNew = false; }
+  saveToStorage();
+  render();
+}
+
+function restoreNote(id) {
+  notes = notes.map(n => n.id === id ? { ...n, deleted: false } : n);
+  saveToStorage();
+  render();
+}
+
+function permanentDelete(id) {
+  closeConfirm();
+  notes = notes.filter(n => n.id !== id);
+  if (state.activeNoteId === id) state.activeNoteId = null;
+  saveToStorage();
+  render();
+}
+
+function emptyTrash() {
+  closeConfirm();
+  notes = notes.filter(n => !n.deleted);
+  state.activeNoteId = null;
+  saveToStorage();
+  render();
+}
+
+function openConfirm(target) {
+  state.confirmTarget = target;
+  document.getElementById("confirm-body").textContent = target === "all"
+    ? "All notes in Trash will be permanently deleted. This cannot be undone."
+    : "This note will be permanently deleted. This cannot be undone.";
+  document.getElementById("confirm-overlay").classList.add("visible");
+}
+function closeConfirm() {
+  state.confirmTarget = null;
+  document.getElementById("confirm-overlay").classList.remove("visible");
+}
+
+function escHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// ── Event listeners ───────────────────────────────────────────────────────────
+document.getElementById("btn-new-note").addEventListener("click", newNote);
+document.getElementById("btn-toggle-sidebar").addEventListener("click", () => { state.sidebarOpen = !state.sidebarOpen; render(); });
+document.getElementById("search-input").addEventListener("input", render);
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => { state.tab = btn.dataset.tab; state.activeNoteId = null; state.isNew = false; render(); });
+});
+
+document.getElementById("btn-save").addEventListener("click", saveNote);
+
+document.getElementById("btn-pin").addEventListener("click", () => { if (state.activeNoteId) togglePin(state.activeNoteId); });
+
+document.getElementById("btn-trash-note").addEventListener("click", () => { if (state.activeNoteId) trashNote(state.activeNoteId); });
+
+document.getElementById("btn-restore").addEventListener("click", () => { if (state.activeNoteId) restoreNote(state.activeNoteId); });
+
+document.getElementById("btn-perm-delete-editor").addEventListener("click", () => { if (state.activeNoteId) openConfirm(state.activeNoteId); });
+
+document.getElementById("btn-empty-trash").addEventListener("click", () => openConfirm("all"));
+
+document.getElementById("edit-title").addEventListener("blur", saveNote);
+document.getElementById("edit-body").addEventListener("blur", saveNote);
+
+document.getElementById("edit-folder-select").addEventListener("change", e => {
+  state.editFolder = e.target.value;
+  e.target.style.color = FOLDER_COLORS[e.target.value] || "#c9b99a";
+  if (!state.isNew) saveNote();
+});
+
+document.getElementById("btn-dismiss-error").addEventListener("click", () => document.getElementById("error-toast").classList.remove("visible"));
+
+document.getElementById("confirm-overlay").addEventListener("click", e => { if (e.target === document.getElementById("confirm-overlay")) closeConfirm(); });
+document.getElementById("btn-confirm-cancel").addEventListener("click", closeConfirm);
+document.getElementById("btn-confirm-delete").addEventListener("click", () => {
+  const t = state.confirmTarget;
+  if (t === "all") emptyTrash();
+  else if (t) permanentDelete(t);
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadNotes();
+</script>
+</body>
+</html>

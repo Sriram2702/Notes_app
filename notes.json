@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "title": "Meeting Agenda",
+    "body": "Discuss Q3 roadmap\nReview open PRs\nPlan sprint goals",
+    "folder": "Work",
+    "pinned": true,
+    "created": "2026-06-01",
+    "deleted": false
+  },
+  {
+    "id": 2,
+    "title": "Book List",
+    "body": "The Dispossessed\nKlara and the Sun\nPiranesi\nLeGuin's collected essays",
+    "folder": "Personal",
+    "pinned": false,
+    "created": "2026-05-28",
+    "deleted": false
+  },
+  {
+    "id": 3,
+    "title": "App Ideas",
+    "body": "Spatial audio journaling\nCollaborative recipe builder\nReverse calendar planner",
+    "folder": "Ideas",
+    "pinned": true,
+    "created": "2026-05-20",
+    "deleted": false
+  },
+  {
+    "id": 4,
+    "title": "Today's Reflection",
+    "body": "Slow morning. Coffee on the balcony. Wind from the east. Noticed how the light catches the dust on the shelves—maybe that's a metaphor.",
+    "folder": "Journal",
+    "pinned": false,
+    "created": "2026-06-07",
+    "deleted": false
+  }
+]
